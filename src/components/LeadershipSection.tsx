@@ -2,33 +2,76 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Award, Quote, CheckCircle2 } from "lucide-react";
-import { LEADERSHIP as STATIC_LEADERSHIP, CORE_TEAM as STATIC_CORE_TEAM, Leader, TeamMember } from "@/data/portfolioData";
+import { Award, Quote, CheckCircle2, Loader2, Users } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
+export interface TeamMember {
+  _id?: string;
+  name: string;
+  role: string;
+  department?: string;
+  badge?: string;
+  directorField?: string;
+  bio?: string;
+  visionQuote?: string;
+  avatar: string;
+  type?: "director" | "member" | string;
+  highlights?: string[];
+  focus?: string;
+}
+
 export default function LeadershipSection() {
-  const [leadership, setLeadership] = useState<Leader[]>(STATIC_LEADERSHIP);
-  const [coreTeam, setCoreTeam] = useState<TeamMember[]>(STATIC_CORE_TEAM);
+  const [leadership, setLeadership] = useState<TeamMember[]>([]);
+  const [coreTeam, setCoreTeam] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadTeam() {
       try {
         const res = await fetch(`${API_BASE_URL}/team`);
         if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const directors = data.filter((m: any) => m.type === "director");
-            const team = data.filter((m: any) => m.type !== "director");
-            if (directors.length > 0) setLeadership(directors);
-            if (team.length > 0) setCoreTeam(team);
+          const json = await res.json();
+          const data: TeamMember[] = json?.data || [];
+          if (Array.isArray(data)) {
+            const directors = data.filter((m) => m.type === "director");
+            const team = data.filter((m) => m.type !== "director");
+            setLeadership(directors);
+            setCoreTeam(team);
           }
         }
-      } catch {
-        // Fallback to static
+      } catch (err) {
+        console.error("Error loading team from API:", err);
+      } finally {
+        setLoading(false);
       }
     }
     loadTeam();
   }, []);
+
+  if (loading) {
+    return (
+      <section id="leadership" className="py-20 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 text-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-[#1769AA] mx-auto mb-3" />
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Loading Leadership &amp; Team...</p>
+        </div>
+      </section>
+    );
+  }
+
+  // If no team members in database yet, render empty state or hide cleanly
+  if (leadership.length === 0 && coreTeam.length === 0) {
+    return (
+      <section id="leadership" className="py-20 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 text-center py-12">
+          <Users className="w-12 h-12 text-[#1769AA]/40 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-[#0B1220]">No team profiles published yet</h3>
+          <p className="text-slate-500 text-xs mt-1">Add leaders and team members via Admin Panel to display them here live.</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="leadership" className="py-20 bg-white border-b border-[#E2E8F0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
@@ -48,105 +91,133 @@ export default function LeadershipSection() {
         </div>
 
         {/* Directors Zig-Zag Cards */}
-        <div className="space-y-12">
-          {leadership.map((leader, index) => {
-            const isReversed = index % 2 === 1;
+        {leadership.length > 0 && (
+          <div className="space-y-12">
+            {leadership.map((leader, index) => {
+              const isReversed = index % 2 === 1;
 
-            return (
-              <div
-                key={leader.id}
-                className={`grid lg:grid-cols-12 gap-8 items-center bg-[#F3F7FA] p-6 sm:p-10 rounded-2xl border border-[#E2E8F0] shadow-sm text-left ${
-                  isReversed ? "lg:flex-row-reverse" : ""
-                }`}
-              >
-                {/* Photo Column */}
-                <div className={`lg:col-span-4 ${isReversed ? "lg:order-2" : ""}`}>
-                  <div className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-white shadow-md bg-slate-200">
-                    <Image
-                      src={leader.avatar}
-                      alt={leader.name}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white text-left">
-                      <div className="text-xs font-bold text-[#38BDF8] uppercase">
-                        {leader.badge}
+              return (
+                <div
+                  key={leader._id || index}
+                  className={`grid lg:grid-cols-12 gap-8 items-center bg-[#F3F7FA] p-6 sm:p-10 rounded-2xl border border-[#E2E8F0] shadow-sm text-left ${
+                    isReversed ? "lg:flex-row-reverse" : ""
+                  }`}
+                >
+                  {/* Photo Column */}
+                  <div className={`lg:col-span-4 ${isReversed ? "lg:order-2" : ""}`}>
+                    <div className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-white shadow-md bg-slate-200">
+                      {leader.avatar ? (
+                        <Image
+                          src={leader.avatar}
+                          alt={leader.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+                          No Photo
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white text-left">
+                        {leader.badge && (
+                          <div className="text-xs font-bold text-[#38BDF8] uppercase">
+                            {leader.badge}
+                          </div>
+                        )}
+                        <div className="text-sm font-extrabold">{leader.name}</div>
                       </div>
-                      <div className="text-sm font-extrabold">{leader.name}</div>
                     </div>
                   </div>
-                </div>
 
-                {/* Details Column */}
-                <div className={`lg:col-span-8 flex flex-col justify-center text-left ${isReversed ? "lg:order-1" : ""}`}>
-                  <div className="inline-block text-xs font-bold uppercase tracking-wider text-[#1769AA] bg-white border border-[#C5DCF0] px-3 py-1 rounded-full w-fit mb-2">
-                    {leader.directorField}
-                  </div>
+                  {/* Details Column */}
+                  <div className={`lg:col-span-8 flex flex-col justify-center text-left ${isReversed ? "lg:order-1" : ""}`}>
+                    {leader.directorField && (
+                      <div className="inline-block text-xs font-bold uppercase tracking-wider text-[#1769AA] bg-white border border-[#C5DCF0] px-3 py-1 rounded-full w-fit mb-2">
+                        {leader.directorField}
+                      </div>
+                    )}
 
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0B1220] text-left">
-                    {leader.name}
-                  </h3>
-                  <p className="text-sm sm:text-base font-semibold text-[#1769AA] mt-0.5 text-left">
-                    {leader.role}
-                  </p>
-
-                  {/* Vision Quote Card */}
-                  <div className="mt-5 p-4 rounded-xl bg-white border border-[#E2E8F0] relative text-left">
-                    <Quote className="w-6 h-6 text-[#1769AA]/30 absolute top-3 right-3" />
-                    <p className="text-slate-700 text-sm sm:text-base italic leading-relaxed pr-6 text-left">
-                      &quot;{leader.visionQuote}&quot;
+                    <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0B1220] text-left">
+                      {leader.name}
+                    </h3>
+                    <p className="text-sm sm:text-base font-semibold text-[#1769AA] mt-0.5 text-left">
+                      {leader.role}
                     </p>
-                  </div>
 
-                  {/* Bio */}
-                  <p className="mt-4 text-slate-600 text-sm leading-relaxed text-left">
-                    {leader.bio}
-                  </p>
+                    {/* Vision Quote Card */}
+                    {leader.visionQuote && (
+                      <div className="mt-5 p-4 rounded-xl bg-white border border-[#E2E8F0] relative text-left">
+                        <Quote className="w-6 h-6 text-[#1769AA]/30 absolute top-3 right-3" />
+                        <p className="text-slate-700 text-sm sm:text-base italic leading-relaxed pr-6 text-left">
+                          &quot;{leader.visionQuote}&quot;
+                        </p>
+                      </div>
+                    )}
 
-                  {/* Key Highlights */}
-                  <div className="mt-5 flex flex-wrap gap-2 text-left">
-                    {leader.highlights.map((h, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-800"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#1769AA]" />
-                        {h}
-                      </span>
-                    ))}
+                    {/* Bio */}
+                    {leader.bio && (
+                      <p className="mt-4 text-slate-600 text-sm leading-relaxed text-left">
+                        {leader.bio}
+                      </p>
+                    )}
+
+                    {/* Key Highlights */}
+                    {leader.highlights && leader.highlights.length > 0 && (
+                      <div className="mt-5 flex flex-wrap gap-2 text-left">
+                        {leader.highlights.map((h, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-800"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#1769AA]" />
+                            {h}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Engineering Leads */}
-        <div className="mt-16 pt-12 border-t border-[#E2E8F0] text-left">
-          <div className="mb-8 text-left">
-            <h3 className="text-2xl font-bold text-[#0B1220] text-left">
-              Core Engineering &amp; Design Leads
-            </h3>
-            <p className="text-slate-500 text-sm mt-1 text-left">
-              Cross-disciplinary talent driving sprint velocity and architectural stability.
-            </p>
-          </div>
+        {coreTeam.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-[#E2E8F0] text-left">
+            <div className="mb-8 text-left">
+              <h3 className="text-2xl font-bold text-[#0B1220] text-left">
+                Core Engineering &amp; Design Leads
+              </h3>
+              <p className="text-slate-500 text-sm mt-1 text-left">
+                Cross-disciplinary talent driving sprint velocity and architectural stability.
+              </p>
+            </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-            {coreTeam.map((member, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-[#F8FBFE] border border-[#E2E8F0] text-left">
-                <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-white shadow-sm flex-shrink-0">
-                  <Image src={member.avatar} alt={member.name} fill className="object-cover" />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+              {coreTeam.map((member, i) => (
+                <div key={member._id || i} className="flex items-center gap-4 p-4 rounded-xl bg-[#F8FBFE] border border-[#E2E8F0] text-left">
+                  <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-white shadow-sm flex-shrink-0 bg-slate-200">
+                    {member.avatar ? (
+                      <Image src={member.avatar} alt={member.name} fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+                        No Pic
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <h4 className="text-base font-bold text-[#0B1220] text-left">{member.name}</h4>
+                    <p className="text-xs font-semibold text-[#1769AA] text-left">{member.role}</p>
+                    {member.focus && (
+                      <p className="text-xs text-slate-500 mt-0.5 text-left">{member.focus}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h4 className="text-base font-bold text-[#0B1220] text-left">{member.name}</h4>
-                  <p className="text-xs font-semibold text-[#1769AA] text-left">{member.role}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 text-left">{member.focus}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
