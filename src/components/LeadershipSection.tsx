@@ -2,27 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Award, Quote, CheckCircle2, Loader2, Users } from "lucide-react";
+import { Award, Loader2, Users, Sparkles } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 export interface TeamMember {
   _id?: string;
   name: string;
   role: string;
-  department?: string;
   badge?: string;
-  directorField?: string;
-  bio?: string;
-  visionQuote?: string;
   avatar: string;
-  type?: "director" | "member" | string;
-  highlights?: string[];
-  focus?: string;
+  type?: string;
 }
 
 export default function LeadershipSection() {
-  const [leadership, setLeadership] = useState<TeamMember[]>([]);
-  const [coreTeam, setCoreTeam] = useState<TeamMember[]>([]);
+  const [teamList, setTeamList] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,10 +26,7 @@ export default function LeadershipSection() {
           const json = await res.json();
           const data: TeamMember[] = json?.data || [];
           if (Array.isArray(data)) {
-            const directors = data.filter((m) => m.type === "director");
-            const team = data.filter((m) => m.type !== "director");
-            setLeadership(directors);
-            setCoreTeam(team);
+            setTeamList(data);
           }
         }
       } catch (err) {
@@ -50,174 +40,107 @@ export default function LeadershipSection() {
 
   if (loading) {
     return (
-      <section id="leadership" className="py-20 bg-white border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 text-center py-12">
+      <section id="team" className="py-24 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 text-center py-16">
           <Loader2 className="w-8 h-8 animate-spin text-[#1769AA] mx-auto mb-3" />
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Loading Leadership &amp; Team...</p>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Loading Team...</p>
         </div>
       </section>
     );
   }
 
-  // If no team members in database yet, render empty state or hide cleanly
-  if (leadership.length === 0 && coreTeam.length === 0) {
+  if (teamList.length === 0) {
     return (
-      <section id="leadership" className="py-20 bg-white border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 text-center py-12">
+      <section id="team" className="py-24 bg-white border-b border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 text-center py-16">
           <Users className="w-12 h-12 text-[#1769AA]/40 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-[#0B1220]">No team profiles published yet</h3>
-          <p className="text-slate-500 text-xs mt-1">Add leaders and team members via Admin Panel to display them here live.</p>
+          <h3 className="text-base font-bold text-[#0B1220]">No team members added yet</h3>
+          <p className="text-slate-500 text-xs mt-1">Add team members via Admin Panel to display them here live.</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section id="leadership" className="py-20 bg-white border-b border-[#E2E8F0]">
+    <section id="team" className="py-24 bg-white border-b border-[#E2E8F0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
-        {/* Section Header Left-Aligned with Logo */}
-        <div className="max-w-3xl mb-16 text-left">
+        {/* Section Header */}
+        <div className="max-w-3xl mb-20 text-left">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E3EEF8] border border-[#C5DCF0] text-[#1769AA] text-xs font-bold uppercase tracking-wider mb-4">
             <Award className="w-4 h-4" />
-            <span>BOARD OF DIRECTORS &amp; EXECUTIVE LEADERSHIP</span>
+            <span>EXECUTIVE LEADERSHIP &amp; ENGINEERING MINDS</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B1220] tracking-tight text-left">
-            Guiding Vision, Strategy &amp;{" "}
-            <span className="text-[#1769AA]">Industry Leadership</span>
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-[#0B1220] tracking-tight text-left">
+            Meet The Minds Shaping <span className="text-[#1769AA]">Innovation</span>
           </h2>
           <p className="mt-4 text-slate-600 text-base sm:text-lg text-left">
-            Meet our directors and founders heading specialized fields of digital innovation, engineering excellence, and client transformation.
+            Dedicated leaders and engineering talent delivering high-impact digital solutions and scalable software systems.
           </p>
         </div>
 
-        {/* Directors Zig-Zag Cards */}
-        {leadership.length > 0 && (
-          <div className="space-y-12">
-            {leadership.map((leader, index) => {
-              const isReversed = index % 2 === 1;
+        {/* Big Zig-Zag Cards for Team Members */}
+        <div className="space-y-16 sm:space-y-20">
+          {teamList.map((member, index) => {
+            const isReversed = index % 2 === 1;
 
-              return (
+            return (
+              <div
+                key={member._id || index}
+                className={`grid lg:grid-cols-12 gap-8 lg:gap-12 items-center bg-[#F8FBFE] p-8 sm:p-12 lg:p-14 rounded-3xl border border-[#E2E8F0] shadow-sm hover:shadow-md transition-shadow text-left ${
+                  isReversed ? "lg:flex-row-reverse" : ""
+                }`}
+              >
+                {/* Photo Column - Big Card Image */}
+                <div className={`lg:col-span-5 ${isReversed ? "lg:order-2" : "lg:order-1"}`}>
+                  <div className="relative aspect-[4/5] sm:aspect-[1/1] lg:aspect-[4/5] w-full rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-slate-100 group">
+                    {member.avatar ? (
+                      <Image
+                        src={member.avatar}
+                        alt={member.name}
+                        fill
+                        className="object-cover group-hover:scale-103 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2 bg-slate-50">
+                        <Users className="w-16 h-16 opacity-30" />
+                        <span className="text-sm font-semibold">No Picture</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Details Column - Big Clean Typography: Badge, Role, Name */}
                 <div
-                  key={leader._id || index}
-                  className={`grid lg:grid-cols-12 gap-8 items-center bg-[#F3F7FA] p-6 sm:p-10 rounded-2xl border border-[#E2E8F0] shadow-sm text-left ${
-                    isReversed ? "lg:flex-row-reverse" : ""
+                  className={`lg:col-span-7 flex flex-col justify-center text-left ${
+                    isReversed ? "lg:order-1" : "lg:order-2"
                   }`}
                 >
-                  {/* Photo Column */}
-                  <div className={`lg:col-span-4 ${isReversed ? "lg:order-2" : ""}`}>
-                    <div className="relative aspect-[4/5] rounded-xl overflow-hidden border-2 border-white shadow-md bg-slate-200">
-                      {leader.avatar ? (
-                        <Image
-                          src={leader.avatar}
-                          alt={leader.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
-                          No Photo
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white text-left">
-                        {leader.badge && (
-                          <div className="text-xs font-bold text-[#38BDF8] uppercase">
-                            {leader.badge}
-                          </div>
-                        )}
-                        <div className="text-sm font-extrabold">{leader.name}</div>
-                      </div>
+                  {/* Badge */}
+                  {member.badge ? (
+                    <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#1769AA] text-white text-xs sm:text-sm font-bold uppercase tracking-wider w-fit shadow-sm mb-5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{member.badge}</span>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#E3EEF8] text-[#1769AA] text-xs sm:text-sm font-bold uppercase tracking-wider w-fit mb-5">
+                      <span>Team Member</span>
+                    </div>
+                  )}
 
-                  {/* Details Column */}
-                  <div className={`lg:col-span-8 flex flex-col justify-center text-left ${isReversed ? "lg:order-1" : ""}`}>
-                    {leader.directorField && (
-                      <div className="inline-block text-xs font-bold uppercase tracking-wider text-[#1769AA] bg-white border border-[#C5DCF0] px-3 py-1 rounded-full w-fit mb-2">
-                        {leader.directorField}
-                      </div>
-                    )}
+                  {/* Name */}
+                  <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0B1220] tracking-tight text-left">
+                    {member.name}
+                  </h3>
 
-                    <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0B1220] text-left">
-                      {leader.name}
-                    </h3>
-                    <p className="text-sm sm:text-base font-semibold text-[#1769AA] mt-0.5 text-left">
-                      {leader.role}
-                    </p>
-
-                    {/* Vision Quote Card */}
-                    {leader.visionQuote && (
-                      <div className="mt-5 p-4 rounded-xl bg-white border border-[#E2E8F0] relative text-left">
-                        <Quote className="w-6 h-6 text-[#1769AA]/30 absolute top-3 right-3" />
-                        <p className="text-slate-700 text-sm sm:text-base italic leading-relaxed pr-6 text-left">
-                          &quot;{leader.visionQuote}&quot;
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Bio */}
-                    {leader.bio && (
-                      <p className="mt-4 text-slate-600 text-sm leading-relaxed text-left">
-                        {leader.bio}
-                      </p>
-                    )}
-
-                    {/* Key Highlights */}
-                    {leader.highlights && leader.highlights.length > 0 && (
-                      <div className="mt-5 flex flex-wrap gap-2 text-left">
-                        {leader.highlights.map((h, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-800"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5 text-[#1769AA]" />
-                            {h}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {/* Role */}
+                  <p className="text-lg sm:text-2xl font-bold text-[#1769AA] mt-3 text-left">
+                    {member.role}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Engineering Leads */}
-        {coreTeam.length > 0 && (
-          <div className="mt-16 pt-12 border-t border-[#E2E8F0] text-left">
-            <div className="mb-8 text-left">
-              <h3 className="text-2xl font-bold text-[#0B1220] text-left">
-                Core Engineering &amp; Design Leads
-              </h3>
-              <p className="text-slate-500 text-sm mt-1 text-left">
-                Cross-disciplinary talent driving sprint velocity and architectural stability.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-              {coreTeam.map((member, i) => (
-                <div key={member._id || i} className="flex items-center gap-4 p-4 rounded-xl bg-[#F8FBFE] border border-[#E2E8F0] text-left">
-                  <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-white shadow-sm flex-shrink-0 bg-slate-200">
-                    {member.avatar ? (
-                      <Image src={member.avatar} alt={member.name} fill className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
-                        No Pic
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-left">
-                    <h4 className="text-base font-bold text-[#0B1220] text-left">{member.name}</h4>
-                    <p className="text-xs font-semibold text-[#1769AA] text-left">{member.role}</p>
-                    {member.focus && (
-                      <p className="text-xs text-slate-500 mt-0.5 text-left">{member.focus}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
