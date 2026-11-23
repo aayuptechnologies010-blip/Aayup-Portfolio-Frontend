@@ -40,7 +40,7 @@ export default function LeadershipSection() {
 
   if (loading) {
     return (
-      <section id="team" className="py-24 bg-white border-b border-[#E2E8F0]">
+      <section id="leadership" className="py-24 bg-white border-b border-[#E2E8F0] scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 text-center py-16">
           <Loader2 className="w-8 h-8 animate-spin text-[#1769AA] mx-auto mb-3" />
           <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Loading Team...</p>
@@ -51,7 +51,7 @@ export default function LeadershipSection() {
 
   if (teamList.length === 0) {
     return (
-      <section id="team" className="py-24 bg-white border-b border-[#E2E8F0]">
+      <section id="leadership" className="py-24 bg-white border-b border-[#E2E8F0] scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 text-center py-16">
           <Users className="w-12 h-12 text-[#1769AA]/40 mx-auto mb-3" />
           <h3 className="text-base font-bold text-[#0B1220]">No team members added yet</h3>
@@ -62,7 +62,7 @@ export default function LeadershipSection() {
   }
 
   return (
-    <section id="team" className="py-24 bg-white border-b border-[#E2E8F0]">
+    <section id="leadership" className="py-24 bg-white border-b border-[#E2E8F0] scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
         {/* Section Header */}
         <div className="max-w-3xl mb-20 text-left">
